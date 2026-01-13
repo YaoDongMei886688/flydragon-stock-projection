@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞龙股份(002536)智能趋势分析与推演</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .stock-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .info-card {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 25px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: 1px solid #eaeaea;
+        }
+        
+        .chart-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4b6cb7;
+            font-size: 1.4em;
+        }
+        
+        .update-info {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .disclaimer {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .last-updated {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            color: #1565c0;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐉 飞龙股份(002536) 智能趋势分析</h1>
+            <p>基于历史相似模式的走势分析与未来推演</p>
+            
+            <div class="stock-info">
+                <div class="info-card">
+                    <div style="font-size: 0.9em; opacity: 0.9;">当前状态</div>
+                    <div style="font-size: 1.2em; font-weight: bold;">分析中...</div>
+                </div>
+                <div class="info-card">
+                    <div style="font-size: 0.9em; opacity: 0.9;">相似模式</div>
+                    <div style="font-size: 1.2em; font-weight: bold;">计算中...</div>
+                </div>
+                <div class="info-card">
+                    <div style="font-size: 0.9em; opacity: 0.9;">数据更新</div>
+                    <div style="font-size: 1.2em; font-weight: bold;">每日自动</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="disclaimer">
+                ⚠️ <strong>重要提示：</strong> 
+                本图表为基于历史数据的算法推演，旨在展示技术分析方法。
+                历史相似性不代表未来走势，股票投资有风险，请谨慎决策。
+                所有推演结果仅供参考，不构成投资建议。
+            </div>
+            
+            <div class="last-updated">
+                🔄 图表每天收盘后自动更新 | 最后更新: <span id="updateTime">加载中...</span>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">📊 核心分析图表（正在生成...）</div>
+                <div class="loading">
+                    <div style="margin-bottom: 20px;">
+                        <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; 
+                            border-top: 5px solid #4b6cb7; border-radius: 50%; 
+                            animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    </div>
+                    <p>正在获取实时数据并生成分析图表...</p>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                        首次加载可能需要30-60秒
+                    </p>
+                </div>
+                <div id="mainChart"></div>
+            </div>
+            
+            <div class="update-info">
+                <p>💡 技术说明：本系统使用机器学习算法在历史数据中寻找与当前走势最相似的K线形态，</p>
+                <p>并基于相似形态的历史后续表现进行概率推演。图表每天收盘后自动更新。</p>
+                <p style="margin-top: 10px;">
+                    项目地址：<a href="https://github.com/your-username/flydragon-stock-projection" 
+                    target="_blank">GitHub Repository</a> | 
+                    数据源：AKShare财经数据接口
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 自动加载图表
+        function loadChart() {
+            fetch('flydragon_analysis.html')
+                .then(response => response.text())
+                .then(html => {
+                    // 提取Plotly图表数据
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const plotlyDiv = doc.querySelector('.plotly-graph-div');
+                    
+                    if (plotlyDiv) {
+                        document.getElementById('mainChart').innerHTML = plotlyDiv.innerHTML;
+                        
+                        // 更新最后修改时间
+                        fetch('flydragon_analysis.html', { method: 'HEAD' })
+                            .then(res => {
+                                const lastModified = res.headers.get('last-modified');
+                                if (lastModified) {
+                                    document.getElementById('updateTime').textContent = 
+                                        new Date(lastModified).toLocaleString('zh-CN');
+                                }
+                            });
+                    } else {
+                        document.getElementById('mainChart').innerHTML = 
+                            '<div style="text-align: center; padding: 40px; color: #666;">' +
+                            '图表生成中，请稍后刷新页面或等待每日自动更新...</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('加载图表失败:', error);
+                    document.getElementById('mainChart').innerHTML = 
+                        '<div style="text-align: center; padding: 40px; color: #dc3545;">' +
+                        '图表加载失败，请检查网络连接或等待系统自动生成。</div>';
+                });
+        }
+        
+        // 页面加载时自动加载
+        document.addEventListener('DOMContentLoaded', loadChart);
+        
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
