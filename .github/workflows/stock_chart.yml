@@ -31,10 +31,15 @@ jobs:
       - name: List generated files (for debug)
         run: ls -la
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          publish_branch: gh-pages
-          force_orphan: false
+      - name: Commit and Push generated file to MAIN branch
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add flydragon_analysis.html
+          # 检查是否有文件变化，有则提交
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Automated update: regenerate stock chart"
+            git push
+          fi
