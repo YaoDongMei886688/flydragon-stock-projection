@@ -174,68 +174,58 @@ class StockSimilarityAnalyzer:
         
         return projections
     
-    def create_comparison_chart(self, save_path='flydragon_analysis.html'):
+        def create_comparison_chart(self, save_path='flydragon_analysis.html'):
         """创建直观的左右对比样式图表"""
-        import plotly.graph_objects as go
-        from plotly.subplots import make_subplots
+        ... # [前面的代码保持不变，直到第5部分]
 
-        # 1. 获取对比数据（示例，后续可替换为真实算法）
-        # 这里使用模拟数据展示图表效果
-        similar_stock = {
-            'name': '电工合金(300697)',
-            'similarity': '88%',
-            'period': '2021/06/11-2021/07/23',
-            'prices': self.current_pattern['actual_prices'] * 0.95
-        }
+        # --- 5. 右侧：基于最相似历史模式的真实后续走势 ---
+        if self.similar_patterns:
+            # 获取相似度最高的历史模式
+            most_similar = self.similar_patterns[0]
+            
+            # 使用该模式历史上真实的后续价格数据
+            real_future_prices = most_similar['future_prices']
+            real_future_dates = list(range(len(real_future_prices)))
+            
+            # 计算这段历史后续的实际涨跌幅
+            actual_return = most_similar['future_returns']
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=real_future_dates,
+                    y=real_future_prices,
+                    mode='lines+markers',
+                    name=f'历史相似模式后续走势 (实际涨跌幅: {actual_return:.1f}%)',
+                    line=dict(color='#FF6B6B', width=4),
+                    fill='tozeroy',
+                    fillcolor='rgba(255, 107, 107, 0.1)'
+                ),
+                row=1, col=3
+            )
+            
+            # 添加一条水平起始线作为参考
+            fig.add_hline(
+                y=real_future_prices[0],
+                line_dash="dot",
+                line_color="gray",
+                opacity=0.7,
+                row=1, col=3
+            )
+            
+            # 更新右侧子图标题，加入实际收益率信息
+            fig.layout.annotations[2].update(
+                text=f'<b>参考后续走势</b><br><span style="font-size:0.7em;">基于相似度{1/(1+most_similar["distance"]):.1%}的历史模式 | 其后续实际涨跌幅: {actual_return:.1f}%</span>'
+            )
+        else:
+            # 如果没有找到相似模式，显示提示信息
+            fig.add_annotation(
+                x=0.5, y=0.5, xref="x domain", yref="y domain",
+                text="未找到足够相似的历史走势模式",
+                showarrow=False,
+                row=1, col=3
+            )
         
-        similar_history = {
-            'name': '上海电力(600021)',
-            'similarity': '79%',
-            'period': '2019/11/01-2019/12/12',
-            'prices': self.current_pattern['actual_prices'] * 1.05
-        }
-        
-        # 2. 创建三列子图布局
-        fig = make_subplots(
-            rows=1, cols=3,
-            column_widths=[0.3, 0.3, 0.4],
-            subplot_titles=(
-                f'<b>走势最相似的个股</b><br><span style="font-size:0.8em;">相似度{similar_stock["similarity"]}</span>',
-                f'<b>最相似的历史走势</b><br><span style="font-size:0.8em;">相似度{similar_history["similarity"]}</span>',
-                '<b>参考后续走势图</b>'
-            ),
-            horizontal_spacing=0.1
-        )
-        
-        # 3. 左侧：相似个股对比
-        dates = list(range(len(self.current_pattern['actual_prices'])))
-        fig.add_trace(
-            go.Scatter(x=dates, y=self.current_pattern['actual_prices'],
-                       mode='lines', name='当前股票(飞龙)',
-                       line=dict(color='red', width=3)),
-            row=1, col=1
-        )
-        fig.add_trace(
-            go.Scatter(x=dates, y=similar_stock['prices'],
-                       mode='lines', name=similar_stock['name'],
-                       line=dict(color='blue', width=3, dash='dash')),
-            row=1, col=1
-        )
-        
-        # 4. 中间：历史走势对比
-        fig.add_trace(
-            go.Scatter(x=dates, y=self.current_pattern['actual_prices'],
-                       mode='lines', name='当前走势',
-                       line=dict(color='red', width=3),
-                       showlegend=False),
-            row=1, col=2
-        )
-        fig.add_trace(
-            go.Scatter(x=dates, y=similar_history['prices'],
-                       mode='lines', name=similar_history['name'],
-                       line=dict(color='green', width=3, dash='dash')),
-            row=1, col=2
-        )
+        # --- [后面的布局和保存代码保持不变] ---
         
         # 5. 右侧：后续走势参考（示例）
         future_dates = list(range(20))
