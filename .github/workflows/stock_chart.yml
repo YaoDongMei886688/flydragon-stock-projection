@@ -1,7 +1,7 @@
-name: Generate Stock Chart and Deploy
+name: Generate and Deploy Stock Chart
 
 on:
-  workflow_dispatch:  # 首先保证可以手动触发
+  workflow_dispatch: # 允许手动触发
   schedule:
     - cron: '30 10 * * *' # 每天UTC时间10:30运行（即北京时间18:30）
 
@@ -9,7 +9,7 @@ jobs:
   generate-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 这是关键权限，允许工作流写文件
+      contents: write  # 关键权限，允许工作流写文件
 
     steps:
       - name: Checkout code
@@ -28,10 +28,7 @@ jobs:
       - name: Generate the chart HTML file
         run: python stock_analysis.py
 
-      - name: List generated files (for debug)
-        run: ls -la
-
-      - name: Commit and Push generated file to MAIN branch
+      - name: Commit and Push generated file
         run: |
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -42,4 +39,5 @@ jobs:
           else
             git commit -m "Automated update: regenerate stock chart"
             git push
+            echo "✅ Chart updated and pushed."
           fi
