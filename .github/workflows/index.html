@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>飞龙股份(002536)智能趋势分析与推演</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -41,6 +40,12 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
         .stock-info {
             display: flex;
             justify-content: center;
@@ -54,6 +59,18 @@
             padding: 15px 25px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
+            min-width: 150px;
+        }
+        
+        .info-card .label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .info-card .value {
+            font-size: 1.3em;
+            font-weight: bold;
         }
         
         .content {
@@ -63,7 +80,7 @@
         .chart-container {
             background: white;
             border-radius: 15px;
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             border: 1px solid #eaeaea;
@@ -74,7 +91,11 @@
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 2px solid #4b6cb7;
-            font-size: 1.4em;
+            font-size: 1.5em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .update-info {
@@ -86,28 +107,57 @@
             border-top: 1px solid #eee;
         }
         
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-        
         .disclaimer {
             background: #fff8e1;
             border-left: 4px solid #ffc107;
-            padding: 15px;
+            padding: 18px;
             margin: 20px 0;
             border-radius: 8px;
-            font-size: 0.9em;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        
+        .disclaimer strong {
+            color: #e65100;
         }
         
         .last-updated {
             background: #e3f2fd;
-            padding: 10px;
+            padding: 15px;
             border-radius: 8px;
-            margin: 15px 0;
+            margin: 20px 0;
             text-align: center;
             color: #1565c0;
+            font-weight: 500;
+        }
+        
+        .loading-fallback {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: #f9f9f9;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none; /* 默认隐藏，仅在iframe加载失败时显示 */
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background-color: #4caf50;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
         
         @media (max-width: 768px) {
@@ -127,23 +177,231 @@
             .content {
                 padding: 15px;
             }
+            
+            .stock-info {
+                gap: 15px;
+            }
+            
+            .info-card {
+                min-width: 120px;
+                padding: 12px 18px;
+            }
+        }
+        
+        /* 图表iframe样式 */
+        .chart-frame {
+            width: 100%;
+            height: 900px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            transition: opacity 0.3s ease;
+        }
+        
+        .chart-frame.loading {
+            opacity: 0.3;
+        }
+        
+        /* 页脚链接样式 */
+        a {
+            color: #4b6cb7;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        a:hover {
+            color: #182848;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-                <div class="chart-container">
-                <div class="chart-title">📊 飞龙股份智能分析与走势推演</div>
+    <div class="container">
+        <div class="header">
+            <h1>🐉 飞龙股份(002536) 智能趋势分析</h1>
+            <p>基于历史相似模式的走势分析与未来推演 | 每日自动更新</p>
+            
+            <div class="stock-info">
+                <div class="info-card">
+                    <div class="label">分析状态</div>
+                    <div class="value">
+                        <span class="status-indicator status-active"></span>
+                        <span id="statusText">运行正常</span>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="label">数据更新</div>
+                    <div class="value">每日收盘后</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">图表版本</div>
+                    <div class="value" id="chartVersion">v1.0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="disclaimer">
+                ⚠️ <strong>重要提示：</strong> 
+                本图表为基于历史数据的算法推演，旨在展示技术分析方法。
+                历史相似性不代表未来走势，股票投资有风险，请谨慎决策。
+                所有推演结果仅供参考，不构成投资建议。
+            </div>
+            
+            <div class="last-updated">
+                🔄 图表已启用每日自动更新 | 最后生成时间: <span id="updateTime">正在加载...</span>
+                <br>
+                <small>如果图表未显示，请等待几秒后刷新页面，或检查网络连接。</small>
+            </div>
+            
+            <!-- 主要图表容器 -->
+            <div class="chart-container">
+                <div class="chart-title">📊 核心分析图表</div>
+                
                 <!-- 直接嵌入已生成的图表文件 -->
                 <iframe 
+                    id="mainChartFrame"
+                    class="chart-frame"
                     src="flydragon_analysis.html" 
-                    style="width: 100%; height: 900px; border: none; border-radius: 10px;">
+                    title="飞龙股份趋势分析图表"
+                    onload="onChartLoad()"
+                    onerror="onChartError()">
                 </iframe>
-                <p style="text-align: center; color: #666; margin-top: 10px; font-size: 0.9em;">
-                    如果图表区域空白，请稍等几秒刷新页面，或确认 <code>flydragon_analysis.html</code> 文件已生成。
+                
+                <!-- 加载失败时的备用提示 -->
+                <div class="loading-fallback" id="fallbackMessage">
+                    <div style="margin-bottom: 20px;">
+                        <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; 
+                            border-top: 5px solid #4b6cb7; border-radius: 50%; 
+                            animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    </div>
+                    <h3>图表加载中...</h3>
+                    <p>正在加载分析图表，这可能需要几秒钟时间。</p>
+                    <p style="margin-top: 15px;">
+                        <button onclick="retryLoadChart()" style="padding: 10px 20px; background: #4b6cb7; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            重新加载图表
+                        </button>
+                    </p>
+                    <p style="margin-top: 20px; font-size: 0.9em; color: #666;">
+                        如果长时间无法加载，可能是图表文件正在生成中，请稍后再试。<br>
+                        您也可以直接访问 <a href="flydragon_analysis.html" target="_blank">flydragon_analysis.html</a> 查看图表。
+                    </p>
+                </div>
+            </div>
+            
+            <div class="update-info">
+                <p>💡 <strong>技术说明：</strong>本系统使用机器学习算法在历史数据中寻找与当前走势最相似的K线形态，</p>
+                <p>并基于相似形态的历史后续表现进行概率推演。图表每天收盘后自动更新。</p>
+                <p style="margin-top: 15px;">
+                    项目代码：<a href="https://github.com/YaoDongMei886688/flydragon-stock-projection" 
+                    target="_blank">GitHub仓库</a> | 
+                    数据来源：AKShare财经数据接口 |
+                    图表引擎：Plotly.js
+                </p>
+                <p style="margin-top: 10px; font-size: 0.85em; color: #888;">
+                    页面最后刷新: <span id="pageRefreshTime"></span> |
+                    图表文件: <code id="chartFileName">flydragon_analysis.html</code>
                 </p>
             </div>
-    
+        </div>
+    </div>
+
     <script>
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 显示页面刷新时间
+            const now = new Date();
+            document.getElementById('pageRefreshTime').textContent = 
+                now.toLocaleString('zh-CN', { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            
+            // 设置初始状态
+            document.getElementById('fallbackMessage').style.display = 'none';
+            
+            // 尝试获取图表文件的最后修改时间
+            fetchChartLastModified();
+        });
         
+        // 图表加载成功回调
+        function onChartLoad() {
+            console.log('图表加载成功');
+            document.getElementById('statusText').textContent = '图表已加载';
+            document.getElementById('fallbackMessage').style.display = 'none';
+            
+            // 更新图表版本时间戳
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
+                           now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('chartVersion').textContent = 'v1.0 @ ' + timeStr;
+            
+            // 更新最后生成时间
+            document.getElementById('updateTime').textContent = now.toLocaleString('zh-CN');
+        }
+        
+        // 图表加载失败回调
+        function onChartError() {
+            console.log('图表加载失败，显示备用信息');
+            document.getElementById('statusText').textContent = '加载失败';
+            document.getElementById('statusText').style.color = '#f44336';
+            
+            // 显示备用提示信息
+            document.getElementById('fallbackMessage').style.display = 'block';
+            
+            // 更新最后生成时间显示
+            document.getElementById('updateTime').innerHTML = 
+                '<span style="color:#f44336;">图表文件可能尚未生成</span>';
+        }
+        
+        // 重新加载图表
+        function retryLoadChart() {
+            console.log('重新加载图表');
+            document.getElementById('statusText').textContent = '重新加载中...';
+            document.getElementById('fallbackMessage').style.display = 'none';
+            document.getElementById('mainChartFrame').classList.add('loading');
+            
+            // 重新设置iframe的src（添加时间戳避免缓存）
+            const frame = document.getElementById('mainChartFrame');
+            frame.src = 'flydragon_analysis.html?t=' + new Date().getTime();
+            
+            // 3秒后移除loading状态
+            setTimeout(() => {
+                frame.classList.remove('loading');
+            }, 3000);
+        }
+        
+        // 获取图表文件的最后修改时间
+        function fetchChartLastModified() {
+            fetch('flydragon_analysis.html', { method: 'HEAD' })
+                .then(res => {
+                    if (res.ok) {
+                        const lastModified = res.headers.get('last-modified');
+                        if (lastModified) {
+                            const modDate = new Date(lastModified);
+                            document.getElementById('updateTime').textContent = 
+                                modDate.toLocaleString('zh-CN');
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.log('无法获取文件修改时间:', err);
+                });
+        }
+        
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
