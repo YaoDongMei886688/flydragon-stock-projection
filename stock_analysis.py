@@ -2,10 +2,6 @@ import akshare as ak
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-import matplotlib.dates as mdates
-from scipy.spatial.distance import cdist
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -178,12 +174,13 @@ class StockSimilarityAnalyzer:
         
         return projections
     
-        def create_comparison_chart(self, save_path='flydragon_analysis.html'):
+    def create_comparison_chart(self, save_path='flydragon_analysis.html'):
         """创建直观的左右对比样式图表"""
         import plotly.graph_objects as go
         from plotly.subplots import make_subplots
 
         # 1. 获取对比数据（示例，后续可替换为真实算法）
+        # 这里使用模拟数据展示图表效果
         similar_stock = {
             'name': '电工合金(300697)',
             'similarity': '88%',
@@ -264,6 +261,7 @@ class StockSimilarityAnalyzer:
             )
         )
         
+        # 更新坐标轴标签
         fig.update_xaxes(title_text="时间周期", row=1, col=1)
         fig.update_yaxes(title_text="价格", row=1, col=1)
         fig.update_xaxes(title_text="时间周期", row=1, col=2)
@@ -271,7 +269,7 @@ class StockSimilarityAnalyzer:
         fig.update_xaxes(title_text="后续交易日", row=1, col=3)
         fig.update_yaxes(title_text="价格", row=1, col=3)
         
-        # 7. 保存
+        # 7. 保存图表
         fig.write_html(save_path)
         print(f"直观对比图表已保存至: {save_path}")
         return fig
